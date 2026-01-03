@@ -677,7 +677,7 @@ Cleanup complete for DEV-18
 
 **Tasks:**
 
-- [ ] **4.1 Write README.md**
+- [x] **4.1 Write README.md**
     - Project description and motivation
     - Installation instructions
     - Quick start guide
@@ -687,7 +687,7 @@ Cleanup complete for DEV-18
     - Bare repo setup guide
     - Troubleshooting section
 
-- [ ] **4.2 Improve example agent prompts**
+- [x] **4.2 Improve example agent prompts**
     - Refine build.md with detailed instructions
     - Refine test.md with testing best practices
     - Refine review.md with review checklist
