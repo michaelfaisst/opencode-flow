@@ -29,7 +29,7 @@
 		"lint:fix": "eslint src/ --fix",
 		"format": "prettier --write src/",
 		"format:check": "prettier --check src/",
-		"prepare": "husky"
+		"prepare": "husky || true"
 	},
 	"keywords": [
 		"opencode",
