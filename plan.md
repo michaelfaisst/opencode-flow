@@ -164,26 +164,26 @@ agents:
     # Each agent has a name and prompt file
     - name: build
       # Path to prompt markdown file (relative to .opencode-flow/)
-      prompt: ./agents/build.md
+      promptPath: ./agents/build.md
       # Override model for this agent (optional)
       model: anthropic/claude-sonnet-4-20250514
       # Override OpenCode agent for this agent (optional)
       agent: plan
 
     - name: test
-      prompt: ./agents/test.md
+      promptPath: ./agents/test.md
       # Uses defaultModel and defaultAgent from settings
 
     - name: review
-      prompt: ./agents/review.md
+      promptPath: ./agents/review.md
       model: anthropic/claude-sonnet-4-20250514
 ```
 
 ### Configuration Validation Rules
 
 - `agents` array must have at least one agent
-- Each agent must have `name` and `prompt` properties
-- `prompt` file must exist and be readable
+- Each agent must have `name` and `promptPath` properties
+- `promptPath` file must exist and be readable
 - `name` must be unique across all agents
 - `model` format must be `provider/model` if specified
 
@@ -541,7 +541,7 @@ Cleanup complete for DEV-18
 
 **Tasks:**
 
-- [ ] **2.1 Implement config loader (src/lib/config.ts)**
+- [x] **2.1 Implement config loader (src/lib/config.ts)**
     - `findConfigDir()` - Find `.opencode-flow/` directory (walk up from cwd)
     - `loadConfig()` - Parse and validate `pipeline.yaml`
     - `validateConfig()` - Ensure required fields exist

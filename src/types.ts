@@ -15,7 +15,7 @@ export interface AgentConfig {
 	/** Unique name for this agent */
 	name: string;
 	/** Path to prompt markdown file (relative to .opencode-flow/) */
-	prompt: string;
+	promptPath: string;
 	/** Override model for this agent (optional) - format: provider/model */
 	model?: string;
 	/** Override OpenCode agent for this agent (optional) */
