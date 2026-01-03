@@ -10,6 +10,7 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		},
+		"types": ["vitest/globals"],
 		"strict": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
