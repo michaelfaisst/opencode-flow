@@ -26,6 +26,7 @@
 ### Problem
 
 When using OpenCode to implement features, the typical workflow involves:
+
 1. Planning with a planning agent (researching, creating Linear stories)
 2. Switching to a build agent for implementation
 3. Manually reviewing and testing
@@ -36,20 +37,23 @@ This process has idle time between steps and requires manual orchestration.
 ### Solution
 
 **opencode-flow** automates the implementation pipeline by:
-1. Taking a Linear story ID as input
-2. Creating an isolated git worktree for the feature
-3. Running a configurable sequence of agents (build → test → review)
-4. Producing a GitHub PR with proper documentation and review comments
+
+1. Taking one or more Linear story IDs as input
+2. Creating an isolated git worktree for each feature
+3. Running a configurable sequence of agents (build → test → review) for each story
+4. Producing GitHub PRs with proper documentation and review comments
 
 This enables parallel feature development - start multiple pipelines and review completed PRs when ready.
 
 ### Key Design Decisions
 
 - **Sequential agent execution**: Agents run one after another, each building on the previous agent's work
+- **Sequential story execution**: When multiple stories are provided, each story is processed completely before moving to the next
 - **Git worktree isolation**: Each feature gets its own worktree, enabling parallel work without branch conflicts
 - **Bare repo assumption**: The tool assumes the repository is cloned as a bare repo for clean worktree management
 - **OpenCode as execution engine**: Each agent runs via `opencode run` with configurable model/agent settings
 - **Local state only**: Run state is stored locally and gitignored, not committed to the repository
+- **Continue on failure**: When processing multiple stories, failures in one story don't stop the rest; all results are reported at the end
 
 ---
 
@@ -83,61 +87,61 @@ opencode-flow/
 ### Execution Flow
 
 ```
-ocf run DEV-18
+ocf run DEV-18 DEV-19 DEV-20
        │
        ▼
 ┌──────────────────────────────────┐
 │ 1. Load & validate pipeline.yaml │
+│ 2. Capture git root directory    │
+│ 3. Validate all story IDs        │
 └──────────────────────────────────┘
        │
        ▼
 ┌──────────────────────────────────┐
-│ 2. Check for bare repo           │
-│    (warn if not bare)            │
+│ For each storyId:                │
+│   a. chdir to git root           │
+│   b. Check for bare repo         │
+│      (warn if not bare)          │
+│   c. Create worktree             │
+│      git worktree add <storyId>  │
+│      -b flow/<storyId>           │
+│   d. Initialize run state        │
+│   e. For each agent in pipeline: │
+│      - Read prompt markdown      │
+│      - Substitute template vars  │
+│      - cd into worktree          │
+│      - Run: opencode run "prompt"│
+│        --model X --agent Y       │
+│      - Stream stdout/stderr      │
+│      - Update state on completion│
+│      - Stop story if exit ≠ 0    │
+│   f. Mark run completed/failed   │
+│   g. Collect result              │
 └──────────────────────────────────┘
        │
        ▼
 ┌──────────────────────────────────┐
-│ 3. Create worktree               │
-│    git worktree add DEV-18       │
-│    -b flow/DEV-18                │
-└──────────────────────────────────┘
-       │
-       ▼
-┌──────────────────────────────────┐
-│ 4. Initialize run state          │
-│    .opencode-flow/runs/DEV-18.json│
-└──────────────────────────────────┘
-       │
-       ▼
-┌──────────────────────────────────┐
-│ 5. For each agent in pipeline:   │
-│    a. Read prompt markdown       │
-│    b. Substitute template vars   │
-│    c. cd into worktree           │
-│    d. Run: opencode run "prompt" │
-│       --model X --agent Y        │
-│    e. Stream stdout/stderr       │
-│    f. Update state on completion │
-│    g. Stop if exit code ≠ 0      │
-└──────────────────────────────────┘
-       │
-       ▼
-┌──────────────────────────────────┐
-│ 6. Mark run as completed/failed  │
+│ Display summary of all results   │
 └──────────────────────────────────┘
 ```
 
 ### Dependencies
 
-| Package | Version | Purpose |
-|---------|---------|---------|
-| commander | ^12.1.0 | CLI framework |
-| yaml | ^2.6.0 | Parse pipeline.yaml |
-| chalk | ^5.3.0 | Colored terminal output |
-| typescript | ^5.7.0 | TypeScript compiler (dev) |
-| @types/node | ^22.0.0 | Node.js type definitions (dev) |
-| tsup | ^8.3.0 | Build/bundle tool (dev) |
+| Package                | Version | Purpose                                          |
+| ---------------------- | ------- | ------------------------------------------------ |
+| commander              | ^12.1.0 | CLI framework                                    |
+| yaml                   | ^2.6.0  | Parse pipeline.yaml                              |
+| chalk                  | ^5.3.0  | Colored terminal output                          |
+| typescript             | ^5.7.0  | TypeScript compiler (dev)                        |
+| @types/node            | ^22.0.0 | Node.js type definitions (dev)                   |
+| tsup                   | ^8.3.0  | Build/bundle tool (dev)                          |
+| prettier               | ^3.4.0  | Code formatting                                  |
+| eslint                 | ^9.0.0  | Code linting                                     |
+| @eslint/js             | ^9.0.0  | ESLint JavaScript config                         |
+| typescript-eslint      | ^8.0.0  | ESLint TypeScript support                        |
+| eslint-config-prettier | ^9.1.0  | Disable ESLint rules that conflict with Prettier |
+| husky                  | ^9.0.0  | Git hooks (dev)                                  |
+| lint-staged            | ^15.0.0 | Run linters on staged files (dev)                |
 
 ---
 
@@ -151,9 +155,9 @@ settings:
   # Default model for all agents (optional)
   # Format: provider/model
   defaultModel: anthropic/claude-sonnet-4-20250514
-  
+
   # Default OpenCode agent for all agents (optional)
-  defaultAgent: code
+  defaultAgent: build
 
 # Agents to run in sequence
 agents:
@@ -164,7 +168,7 @@ agents:
     # Override model for this agent (optional)
     model: anthropic/claude-sonnet-4-20250514
     # Override OpenCode agent for this agent (optional)
-    agent: code
+    agent: plan
 
   - name: test
     prompt: ./agents/test.md
@@ -189,12 +193,12 @@ agents:
 
 Variables can be used in agent prompt markdown files using `{{variableName}}` syntax.
 
-| Variable | Description | Example Value |
-|----------|-------------|---------------|
-| `{{storyId}}` | Linear story ID passed to the CLI | `DEV-18` |
-| `{{branch}}` | Git branch name created for this run | `flow/DEV-18` |
-| `{{worktreePath}}` | Absolute path to the worktree directory | `/path/to/repo/DEV-18` |
-| `{{agentName}}` | Name of the current agent being executed | `build` |
+| Variable           | Description                              | Example Value          |
+| ------------------ | ---------------------------------------- | ---------------------- |
+| `{{storyId}}`      | Linear story ID passed to the CLI        | `DEV-18`               |
+| `{{branch}}`       | Git branch name created for this run     | `flow/DEV-18`          |
+| `{{worktreePath}}` | Absolute path to the worktree directory  | `/path/to/repo/DEV-18` |
+| `{{agentName}}`    | Name of the current agent being executed | `build`                |
 
 ### Example Usage in Prompt
 
@@ -204,11 +208,13 @@ Variables can be used in agent prompt markdown files using `{{variableName}}` sy
 You are implementing Linear story **{{storyId}}**.
 
 ## Context
+
 - Branch: `{{branch}}`
 - Working directory: `{{worktreePath}}`
 - Agent: `{{agentName}}`
 
 ## Instructions
+
 1. Fetch story details using Linear MCP: `{{storyId}}`
 2. Implement the feature
 3. Create a PR
@@ -222,7 +228,13 @@ You are implementing Linear story **{{storyId}}**.
 
 Initialize opencode-flow configuration in the current repository.
 
+**Requirements:**
+
+- Must be run from the git root directory (bare repo root)
+- Will fail if not in git root
+
 **What it does:**
+
 1. Creates `.opencode-flow/` directory
 2. Creates `.opencode-flow/pipeline.yaml` with example configuration
 3. Creates `.opencode-flow/agents/` directory
@@ -230,11 +242,13 @@ Initialize opencode-flow configuration in the current repository.
 5. Adds `runs/` to `.opencode-flow/.gitignore`
 
 **Usage:**
+
 ```bash
 ocf init
 ```
 
 **Output:**
+
 ```
 ✓ Created .opencode-flow/pipeline.yaml
 ✓ Created .opencode-flow/agents/build.md
@@ -247,35 +261,46 @@ opencode-flow initialized! Edit .opencode-flow/pipeline.yaml to configure your p
 
 ---
 
-### `ocf run <storyId>`
+### `ocf run <storyId...>`
 
-Run the full pipeline for a Linear story.
+Run the full pipeline for one or more Linear stories.
 
 **What it does:**
+
 1. Validates configuration
-2. Checks if repo is bare (warns if not)
-3. Creates worktree at `<storyId>/` on branch `flow/<storyId>`
-4. Executes each agent sequentially
-5. Streams OpenCode output to terminal
-6. Updates state after each agent
-7. Stops and reports on failure
+2. Captures the git root directory
+3. For each story (sequentially):
+   - Returns to git root directory
+   - Checks if run state already exists → skip with "run already exists"
+   - Checks if worktree already exists → skip with "worktree already exists"
+   - Checks if repo is bare (warns if not)
+   - Creates worktree at `<storyId>/` on branch `flow/<storyId>`
+   - Executes each agent sequentially
+   - Streams OpenCode output to terminal
+   - Updates state after each agent
+   - Records success, failure, or skip
+4. Displays summary of all results at the end
+5. Exits with code 0 only if ALL stories completed successfully; exits with code 1 if any failed or were skipped
 
 **Usage:**
+
 ```bash
-# Run full pipeline
+# Run pipeline for a single story
 ocf run DEV-18
 
-# Start from a specific agent (for recovery)
-ocf run DEV-18 --from test
+# Run pipeline for multiple stories (processed sequentially)
+ocf run DEV-18 DEV-19 DEV-20
 ```
 
-**Flags:**
-| Flag | Description |
-|------|-------------|
-| `--from <agent>` | Start pipeline from a specific agent (skips previous agents) |
+**Output (single story):**
 
-**Output:**
 ```
+◐ Running pipeline for 1 story: DEV-18
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1/1] DEV-18
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ◐ Creating worktree for DEV-18...
 ✓ Worktree created at /path/to/repo/DEV-18
 
@@ -291,15 +316,70 @@ ocf run DEV-18 --from test
 ...
 
 ✓ Pipeline completed for DEV-18
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ DEV-18: completed
+
+1/1 pipelines completed successfully
 ```
 
-**Error Output:**
+**Output (multiple stories with skips and failures):**
+
 ```
-✗ Agent test failed with exit code 1
-  Run state saved to .opencode-flow/runs/DEV-18.json
-  
-  To retry from the failed agent:
-    ocf run DEV-18 --from test
+◐ Running pipeline for 4 stories: DEV-18, DEV-19, DEV-20, DEV-21
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[1/4] DEV-18
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◐ Creating worktree for DEV-18...
+✓ Worktree created at /path/to/repo/DEV-18
+
+◐ Running agent: build
+[OpenCode output streams here]
+✓ Agent build completed
+
+◐ Running agent: test
+[OpenCode output streams here]
+✓ Agent test completed
+
+✓ Pipeline completed for DEV-18
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[2/4] DEV-19
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⊘ Skipping DEV-19: run already exists
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[3/4] DEV-20
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⊘ Skipping DEV-20: worktree already exists
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[4/4] DEV-21
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◐ Creating worktree for DEV-21...
+✓ Worktree created at /path/to/repo/DEV-21
+
+◐ Running agent: build
+[OpenCode output streams here]
+✗ Agent build failed with exit code 1
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ DEV-18: completed
+⊘ DEV-19: skipped (run already exists)
+⊘ DEV-20: skipped (worktree already exists)
+✗ DEV-21: failed (agent: build)
+
+1/4 pipelines completed successfully
+1 failed, 2 skipped
 ```
 
 ---
@@ -309,21 +389,24 @@ ocf run DEV-18 --from test
 Show all pipeline runs and their status.
 
 **What it does:**
+
 1. Reads all JSON files from `.opencode-flow/runs/`
 2. Displays a table with run information
 
 **Usage:**
+
 ```bash
 ocf status
 ```
 
 **Output:**
+
 ```
-Story ID    Branch          Status       Current Agent   Started              
+Story ID    Branch          Status       Current Agent   Started
 ──────────────────────────────────────────────────────────────────────────────
-DEV-18      flow/DEV-18     completed    -               2025-01-15 10:30:00  
-DEV-19      flow/DEV-19     in_progress  test            2025-01-15 11:45:00  
-DEV-20      flow/DEV-20     failed       build           2025-01-15 12:00:00  
+DEV-18      flow/DEV-18     completed    -               2025-01-15 10:30:00
+DEV-19      flow/DEV-19     in_progress  test            2025-01-15 11:45:00
+DEV-20      flow/DEV-20     failed       build           2025-01-15 12:00:00
 
 3 pipeline runs found
 ```
@@ -335,11 +418,13 @@ DEV-20      flow/DEV-20     failed       build           2025-01-15 12:00:00
 Remove a worktree after the PR is merged/closed.
 
 **What it does:**
+
 1. Runs `git worktree remove <storyId>`
 2. Optionally deletes the local branch
 3. Deletes the run state file (unless `--keep-state`)
 
 **Usage:**
+
 ```bash
 # Full cleanup
 ocf cleanup DEV-18
@@ -354,6 +439,7 @@ ocf cleanup DEV-18 --keep-state
 | `--keep-state` | Don't delete the run state JSON file |
 
 **Output:**
+
 ```
 ◐ Removing worktree DEV-18...
 ✓ Worktree removed
@@ -407,15 +493,45 @@ Cleanup complete for DEV-18
   - `Settings` interface
   - `RunState` interface
   - `RunStatus` type
+  - `PipelineResult` interface (for multi-story result tracking)
+
+- [ ] **1.7 Configure Prettier (.prettierrc)**
+  - Semi: true
+  - Double quotes
+  - Trailing commas: all
+  - Tab width: 2
+  - Print width: 100
+
+- [ ] **1.8 Configure ESLint (eslint.config.js)**
+  - Use flat config format (ESLint 9+)
+  - TypeScript recommended rules (recommended-type-checked)
+  - Integrate with Prettier via eslint-config-prettier
+
+- [ ] **1.9 Configure Husky and lint-staged**
+  - Initialize husky
+  - Add pre-commit hook
+  - Configure lint-staged to run ESLint and Prettier on staged files
+
+- [ ] **1.10 Add package.json scripts**
+  - `lint`: `eslint src/`
+  - `lint:fix`: `eslint src/ --fix`
+  - `format`: `prettier --write src/`
+  - `format:check`: `prettier --check src/`
+  - `prepare`: `husky`
 
 **Deliverables:**
-- Project builds successfully with `npm run build`
+
+- Project builds successfully with `bun run build`
 - Empty CLI runs without errors
 
 **Review Checklist:**
-- [ ] `npm install` works
-- [ ] `npm run build` produces `dist/index.js`
+
+- [ ] `bun install` works
+- [ ] `bun run build` produces `dist/index.js`
 - [ ] Types are correctly defined and exported
+- [ ] `bun run lint` passes with no errors
+- [ ] `bun run format:check` passes
+- [ ] Pre-commit hook runs linting and formatting
 
 ---
 
@@ -457,18 +573,22 @@ Cleanup complete for DEV-18
     - Spawn `opencode run` with correct flags
     - Stream stdout/stderr to console
     - Return exit code
-  - `runPipeline(storyId, config, options)` - Execute full pipeline
+  - `runPipeline(storyId, config, gitRoot)` - Execute full pipeline for one story
+    - Change to git root directory
     - Create worktree
     - Initialize state
     - Loop through agents
     - Update state after each agent
     - Handle failures
+    - Return `PipelineResult` with success/failure status
 
 **Deliverables:**
+
 - All library functions implemented and exported
 - Error handling with descriptive messages
 
 **Review Checklist:**
+
 - [ ] Config loader correctly parses valid YAML
 - [ ] Config loader throws on invalid config
 - [ ] Template substitution works with all variables
@@ -485,6 +605,7 @@ Cleanup complete for DEV-18
 **Tasks:**
 
 - [ ] **3.1 Implement init command (src/commands/init.ts)**
+  - Verify running from git root directory (fail if not)
   - Check if `.opencode-flow/` already exists
   - Create directory structure
   - Write `pipeline.yaml` with example config
@@ -493,13 +614,18 @@ Cleanup complete for DEV-18
   - Print success message with next steps
 
 - [ ] **3.2 Implement run command (src/commands/run.ts)**
-  - Parse `storyId` argument
-  - Parse `--from` flag
+  - Parse variadic `storyId...` arguments (one or more story IDs)
   - Load and validate config
+  - Capture git root directory at startup
   - Check for bare repo (warn if not)
-  - Check if run already exists (prompt to continue or fail)
-  - Create worktree (if not using `--from`)
-  - Execute pipeline via runner
+  - For each story ID:
+    - Change back to git root directory before processing
+    - Check if run state already exists → skip with reason
+    - Check if worktree already exists → skip with reason
+    - Execute pipeline via runner
+    - Collect `PipelineResult` (completed/failed/skipped)
+  - Display summary of all results at end
+  - Exit with code 0 if all succeeded; exit with code 1 if any failed or skipped
   - Handle Ctrl+C gracefully (save state)
 
 - [ ] **3.3 Implement status command (src/commands/status.ts)**
@@ -524,13 +650,19 @@ Cleanup complete for DEV-18
   - Add global error handling
 
 **Deliverables:**
+
 - All commands functional end-to-end
 - Helpful error messages for common issues
 
 **Review Checklist:**
+
 - [ ] `ocf init` creates correct file structure
 - [ ] `ocf run DEV-18` creates worktree and runs agents
-- [ ] `ocf run DEV-18 --from test` skips build agent
+- [ ] `ocf run DEV-18 DEV-19 DEV-20` processes all stories sequentially
+- [ ] Stories with existing run state are skipped with appropriate message
+- [ ] Stories with existing worktree are skipped with appropriate message
+- [ ] Multi-story run continues after failure/skip and reports all results
+- [ ] Multi-story run correctly resets to git root between stories
 - [ ] `ocf status` shows runs in table format
 - [ ] `ocf cleanup DEV-18` removes worktree and state
 - [ ] `ocf cleanup DEV-18 --keep-state` preserves state file
@@ -561,7 +693,7 @@ Cleanup complete for DEV-18
 
 - [ ] **4.3 Add input validation**
   - Validate storyId format (non-empty, valid git branch name)
-  - Validate agent names when using `--from`
+  - Validate all story IDs before starting execution
   - Check OpenCode is installed before running
 
 - [ ] **4.4 Improve error messages**
@@ -580,10 +712,12 @@ Cleanup complete for DEV-18
   - Test with actual OpenCode and Linear MCP
 
 **Deliverables:**
+
 - Complete, polished CLI ready for use
 - Comprehensive documentation
 
 **Review Checklist:**
+
 - [ ] README covers all features
 - [ ] Example prompts are production-ready
 - [ ] Error messages are helpful
@@ -721,7 +855,8 @@ You are reviewing the implementation of Linear story **{{storyId}}**.
 
 Items deferred from MVP for future versions:
 
-- [ ] **Pipeline retry** - Retry failed pipelines from the last agent
+- [ ] **Pipeline retry (`--from` flag)** - Resume a failed pipeline from a specific agent
+- [ ] **TUI status display** - Interactive terminal UI with fixed header showing story status and scrollable agent output area (using blessed, ink, or terminal-kit)
 - [ ] **Parallel pipelines** - Run multiple story pipelines simultaneously
 - [ ] **Worktree auto-cleanup** - Automatically remove worktrees after PR merge
 - [ ] **Custom branch naming** - Configure branch pattern (e.g., `feature/{{storyId}}`)
@@ -754,12 +889,26 @@ Items deferred from MVP for future versions:
 
 ### Status Values
 
-| Status | Description |
-|--------|-------------|
-| `pending` | Run created but not started |
-| `in_progress` | Pipeline is currently running |
-| `completed` | All agents finished successfully |
-| `failed` | An agent failed, pipeline stopped |
+| Status        | Description                       |
+| ------------- | --------------------------------- |
+| `pending`     | Run created but not started       |
+| `in_progress` | Pipeline is currently running     |
+| `completed`   | All agents finished successfully  |
+| `failed`      | An agent failed, pipeline stopped |
+
+### Pipeline Result Type
+
+Used internally to track results when running multiple stories:
+
+```typescript
+interface PipelineResult {
+  storyId: string;
+  status: "completed" | "failed" | "skipped";
+  failedAgent?: string; // Name of agent that failed (if status is 'failed')
+  skipReason?: string; // Reason for skip (if status is 'skipped'), e.g., "run already exists", "worktree already exists"
+  error?: string; // Error message (if status is 'failed')
+}
+```
 
 ---
 
@@ -790,6 +939,21 @@ ocf run DEV-18
 ### Error Recovery
 
 If a pipeline fails:
-1. Check the error output
+
+1. Check the error output and run state file (`.opencode-flow/runs/<storyId>.json`)
 2. Fix the issue manually if needed
-3. Run `ocf run <storyId> --from <failed-agent>` to resume
+3. Clean up the failed run: `ocf cleanup <storyId>`
+4. Re-run the full pipeline: `ocf run <storyId>`
+
+Note: A `--from` flag for resuming from a specific agent is planned for a future release.
+
+### Exit Codes
+
+The CLI uses the following exit codes for scripting and CI integration:
+
+| Exit Code | Meaning |
+|-----------|---------|
+| `0` | All stories completed successfully |
+| `1` | One or more stories failed or were skipped |
+
+This ensures that commands like `ocf run STORY-1 STORY-2 && deploy` only proceed if everything succeeded.
