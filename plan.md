@@ -12,10 +12,10 @@
 4. [Template Variables](#template-variables)
 5. [CLI Commands](#cli-commands)
 6. [Implementation Phases](#implementation-phases)
-   - [Phase 1: Project Foundation](#phase-1-project-foundation)
-   - [Phase 2: Core Libraries](#phase-2-core-libraries)
-   - [Phase 3: Commands](#phase-3-commands)
-   - [Phase 4: Documentation & Polish](#phase-4-documentation--polish)
+    - [Phase 1: Project Foundation](#phase-1-project-foundation)
+    - [Phase 2: Core Libraries](#phase-2-core-libraries)
+    - [Phase 3: Commands](#phase-3-commands)
+    - [Phase 4: Documentation & Polish](#phase-4-documentation--polish)
 7. [Example Agent Prompts](#example-agent-prompts)
 8. [Future Enhancements](#future-enhancements)
 
@@ -152,31 +152,31 @@ ocf run DEV-18 DEV-19 DEV-20
 ```yaml
 # Global settings applied to all agents unless overridden
 settings:
-  # Default model for all agents (optional)
-  # Format: provider/model
-  defaultModel: anthropic/claude-sonnet-4-20250514
+    # Default model for all agents (optional)
+    # Format: provider/model
+    defaultModel: anthropic/claude-sonnet-4-20250514
 
-  # Default OpenCode agent for all agents (optional)
-  defaultAgent: build
+    # Default OpenCode agent for all agents (optional)
+    defaultAgent: build
 
 # Agents to run in sequence
 agents:
-  # Each agent has a name and prompt file
-  - name: build
-    # Path to prompt markdown file (relative to .opencode-flow/)
-    prompt: ./agents/build.md
-    # Override model for this agent (optional)
-    model: anthropic/claude-sonnet-4-20250514
-    # Override OpenCode agent for this agent (optional)
-    agent: plan
+    # Each agent has a name and prompt file
+    - name: build
+      # Path to prompt markdown file (relative to .opencode-flow/)
+      prompt: ./agents/build.md
+      # Override model for this agent (optional)
+      model: anthropic/claude-sonnet-4-20250514
+      # Override OpenCode agent for this agent (optional)
+      agent: plan
 
-  - name: test
-    prompt: ./agents/test.md
-    # Uses defaultModel and defaultAgent from settings
+    - name: test
+      prompt: ./agents/test.md
+      # Uses defaultModel and defaultAgent from settings
 
-  - name: review
-    prompt: ./agents/review.md
-    model: anthropic/claude-sonnet-4-20250514
+    - name: review
+      prompt: ./agents/review.md
+      model: anthropic/claude-sonnet-4-20250514
 ```
 
 ### Configuration Validation Rules
@@ -270,15 +270,15 @@ Run the full pipeline for one or more Linear stories.
 1. Validates configuration
 2. Captures the git root directory
 3. For each story (sequentially):
-   - Returns to git root directory
-   - Checks if run state already exists → skip with "run already exists"
-   - Checks if worktree already exists → skip with "worktree already exists"
-   - Checks if repo is bare (warns if not)
-   - Creates worktree at `<storyId>/` on branch `flow/<storyId>`
-   - Executes each agent sequentially
-   - Streams OpenCode output to terminal
-   - Updates state after each agent
-   - Records success, failure, or skip
+    - Returns to git root directory
+    - Checks if run state already exists → skip with "run already exists"
+    - Checks if worktree already exists → skip with "worktree already exists"
+    - Checks if repo is bare (warns if not)
+    - Creates worktree at `<storyId>/` on branch `flow/<storyId>`
+    - Executes each agent sequentially
+    - Streams OpenCode output to terminal
+    - Updates state after each agent
+    - Records success, failure, or skip
 4. Displays summary of all results at the end
 5. Exits with code 0 only if ALL stories completed successfully; exits with code 1 if any failed or were skipped
 
@@ -458,66 +458,66 @@ Cleanup complete for DEV-18
 
 **Tasks:**
 
-- [ ] **1.1 Initialize package.json**
-  - Package name: `opencode-flow`
-  - Binary name: `ocf`
-  - Set up scripts: `build`, `dev`, `start`
-  - Add dependencies: commander, yaml, chalk
-  - Add devDependencies: typescript, @types/node, tsup
+- [x] **1.1 Initialize package.json**
+    - Package name: `opencode-flow`
+    - Binary name: `ocf`
+    - Set up scripts: `build`, `dev`, `start`
+    - Add dependencies: commander, yaml, chalk
+    - Add devDependencies: typescript, @types/node, tsup
 
-- [ ] **1.2 Configure TypeScript (tsconfig.json)**
-  - Target: ES2022
-  - Module: NodeNext
-  - Strict mode enabled
-  - Output to `dist/`
-  - Include `src/`
+- [x] **1.2 Configure TypeScript (tsconfig.json)**
+    - Target: ES2022
+    - Module: NodeNext
+    - Strict mode enabled
+    - Output to `dist/`
+    - Include `src/`
 
-- [ ] **1.3 Configure build tool (tsup.config.ts)**
-  - Entry: `src/index.ts`
-  - Output: `dist/`
-  - Format: ESM
-  - Add shebang for CLI execution
+- [x] **1.3 Configure build tool (tsup.config.ts)**
+    - Entry: `src/index.ts`
+    - Output: `dist/`
+    - Format: ESM
+    - Add shebang for CLI execution
 
-- [ ] **1.4 Create .gitignore**
-  - Ignore `node_modules/`
-  - Ignore `dist/`
+- [x] **1.4 Create .gitignore**
+    - Ignore `node_modules/`
+    - Ignore `dist/`
 
-- [ ] **1.5 Create project folder structure**
-  - Create `src/` directory
-  - Create `src/commands/` directory
-  - Create `src/lib/` directory
+- [x] **1.5 Create project folder structure**
+    - Create `src/` directory
+    - Create `src/commands/` directory
+    - Create `src/lib/` directory
 
-- [ ] **1.6 Define TypeScript types (src/types.ts)**
-  - `PipelineConfig` interface
-  - `AgentConfig` interface
-  - `Settings` interface
-  - `RunState` interface
-  - `RunStatus` type
-  - `PipelineResult` interface (for multi-story result tracking)
+- [x] **1.6 Define TypeScript types (src/types.ts)**
+    - `PipelineConfig` interface
+    - `AgentConfig` interface
+    - `Settings` interface
+    - `RunState` interface
+    - `RunStatus` type
+    - `PipelineResult` interface (for multi-story result tracking)
 
-- [ ] **1.7 Configure Prettier (.prettierrc)**
-  - Semi: true
-  - Double quotes
-  - Trailing commas: all
-  - Tab width: 2
-  - Print width: 100
+- [x] **1.7 Configure Prettier (.prettierrc)**
+    - Semi: true
+    - Double quotes
+    - Trailing commas: all
+    - Tab width: 2
+    - Print width: 100
 
-- [ ] **1.8 Configure ESLint (eslint.config.js)**
-  - Use flat config format (ESLint 9+)
-  - TypeScript recommended rules (recommended-type-checked)
-  - Integrate with Prettier via eslint-config-prettier
+- [x] **1.8 Configure ESLint (eslint.config.js)**
+    - Use flat config format (ESLint 9+)
+    - TypeScript recommended rules (recommended-type-checked)
+    - Integrate with Prettier via eslint-config-prettier
 
-- [ ] **1.9 Configure Husky and lint-staged**
-  - Initialize husky
-  - Add pre-commit hook
-  - Configure lint-staged to run ESLint and Prettier on staged files
+- [x] **1.9 Configure Husky and lint-staged**
+    - Initialize husky
+    - Add pre-commit hook
+    - Configure lint-staged to run ESLint and Prettier on staged files
 
-- [ ] **1.10 Add package.json scripts**
-  - `lint`: `eslint src/`
-  - `lint:fix`: `eslint src/ --fix`
-  - `format`: `prettier --write src/`
-  - `format:check`: `prettier --check src/`
-  - `prepare`: `husky`
+- [x] **1.10 Add package.json scripts**
+    - `lint`: `eslint src/`
+    - `lint:fix`: `eslint src/ --fix`
+    - `format`: `prettier --write src/`
+    - `format:check`: `prettier --check src/`
+    - `prepare`: `husky`
 
 **Deliverables:**
 
@@ -526,12 +526,12 @@ Cleanup complete for DEV-18
 
 **Review Checklist:**
 
-- [ ] `bun install` works
-- [ ] `bun run build` produces `dist/index.js`
-- [ ] Types are correctly defined and exported
-- [ ] `bun run lint` passes with no errors
-- [ ] `bun run format:check` passes
-- [ ] Pre-commit hook runs linting and formatting
+- [x] `bun install` works
+- [x] `bun run build` produces `dist/index.js`
+- [x] Types are correctly defined and exported
+- [x] `bun run lint` passes with no errors
+- [x] `bun run format:check` passes
+- [x] Pre-commit hook runs linting and formatting
 
 ---
 
@@ -542,45 +542,45 @@ Cleanup complete for DEV-18
 **Tasks:**
 
 - [ ] **2.1 Implement config loader (src/lib/config.ts)**
-  - `findConfigDir()` - Find `.opencode-flow/` directory (walk up from cwd)
-  - `loadConfig()` - Parse and validate `pipeline.yaml`
-  - `validateConfig()` - Ensure required fields exist
-  - Throw descriptive errors for invalid config
+    - `findConfigDir()` - Find `.opencode-flow/` directory (walk up from cwd)
+    - `loadConfig()` - Parse and validate `pipeline.yaml`
+    - `validateConfig()` - Ensure required fields exist
+    - Throw descriptive errors for invalid config
 
 - [ ] **2.2 Implement template engine (src/lib/template.ts)**
-  - `substituteVariables(template, variables)` - Replace `{{var}}` placeholders
-  - Handle missing variables gracefully (warn but don't fail)
-  - `TemplateVariables` interface for type safety
+    - `substituteVariables(template, variables)` - Replace `{{var}}` placeholders
+    - Handle missing variables gracefully (warn but don't fail)
+    - `TemplateVariables` interface for type safety
 
 - [ ] **2.3 Implement state manager (src/lib/state.ts)**
-  - `getRunsDir()` - Get path to `.opencode-flow/runs/`
-  - `loadRunState(storyId)` - Load existing run state or return null
-  - `saveRunState(state)` - Write run state to JSON file
-  - `listRuns()` - List all run state files
-  - `deleteRunState(storyId)` - Remove a run state file
+    - `getRunsDir()` - Get path to `.opencode-flow/runs/`
+    - `loadRunState(storyId)` - Load existing run state or return null
+    - `saveRunState(state)` - Write run state to JSON file
+    - `listRuns()` - List all run state files
+    - `deleteRunState(storyId)` - Remove a run state file
 
 - [ ] **2.4 Implement worktree manager (src/lib/worktree.ts)**
-  - `isBareRepo()` - Check if current directory is a bare repo
-  - `worktreeExists(storyId)` - Check if worktree already exists
-  - `createWorktree(storyId)` - Run `git worktree add`
-  - `removeWorktree(storyId)` - Run `git worktree remove`
-  - `getWorktreePath(storyId)` - Get absolute path to worktree
+    - `isBareRepo()` - Check if current directory is a bare repo
+    - `worktreeExists(storyId)` - Check if worktree already exists
+    - `createWorktree(storyId)` - Run `git worktree add`
+    - `removeWorktree(storyId)` - Run `git worktree remove`
+    - `getWorktreePath(storyId)` - Get absolute path to worktree
 
 - [ ] **2.5 Implement agent runner (src/lib/runner.ts)**
-  - `runAgent(agent, variables, config)` - Execute single agent
-    - Read prompt file
-    - Substitute variables
-    - Spawn `opencode run` with correct flags
-    - Stream stdout/stderr to console
-    - Return exit code
-  - `runPipeline(storyId, config, gitRoot)` - Execute full pipeline for one story
-    - Change to git root directory
-    - Create worktree
-    - Initialize state
-    - Loop through agents
-    - Update state after each agent
-    - Handle failures
-    - Return `PipelineResult` with success/failure status
+    - `runAgent(agent, variables, config)` - Execute single agent
+        - Read prompt file
+        - Substitute variables
+        - Spawn `opencode run` with correct flags
+        - Stream stdout/stderr to console
+        - Return exit code
+    - `runPipeline(storyId, config, gitRoot)` - Execute full pipeline for one story
+        - Change to git root directory
+        - Create worktree
+        - Initialize state
+        - Loop through agents
+        - Update state after each agent
+        - Handle failures
+        - Return `PipelineResult` with success/failure status
 
 **Deliverables:**
 
@@ -605,49 +605,49 @@ Cleanup complete for DEV-18
 **Tasks:**
 
 - [ ] **3.1 Implement init command (src/commands/init.ts)**
-  - Verify running from git root directory (fail if not)
-  - Check if `.opencode-flow/` already exists
-  - Create directory structure
-  - Write `pipeline.yaml` with example config
-  - Write example agent prompts
-  - Write `.gitignore` for `runs/`
-  - Print success message with next steps
+    - Verify running from git root directory (fail if not)
+    - Check if `.opencode-flow/` already exists
+    - Create directory structure
+    - Write `pipeline.yaml` with example config
+    - Write example agent prompts
+    - Write `.gitignore` for `runs/`
+    - Print success message with next steps
 
 - [ ] **3.2 Implement run command (src/commands/run.ts)**
-  - Parse variadic `storyId...` arguments (one or more story IDs)
-  - Load and validate config
-  - Capture git root directory at startup
-  - Check for bare repo (warn if not)
-  - For each story ID:
-    - Change back to git root directory before processing
-    - Check if run state already exists → skip with reason
-    - Check if worktree already exists → skip with reason
-    - Execute pipeline via runner
-    - Collect `PipelineResult` (completed/failed/skipped)
-  - Display summary of all results at end
-  - Exit with code 0 if all succeeded; exit with code 1 if any failed or skipped
-  - Handle Ctrl+C gracefully (save state)
+    - Parse variadic `storyId...` arguments (one or more story IDs)
+    - Load and validate config
+    - Capture git root directory at startup
+    - Check for bare repo (warn if not)
+    - For each story ID:
+        - Change back to git root directory before processing
+        - Check if run state already exists → skip with reason
+        - Check if worktree already exists → skip with reason
+        - Execute pipeline via runner
+        - Collect `PipelineResult` (completed/failed/skipped)
+    - Display summary of all results at end
+    - Exit with code 0 if all succeeded; exit with code 1 if any failed or skipped
+    - Handle Ctrl+C gracefully (save state)
 
 - [ ] **3.3 Implement status command (src/commands/status.ts)**
-  - Load all run states
-  - Format as table
-  - Handle empty state (no runs yet)
-  - Sort by most recent first
+    - Load all run states
+    - Format as table
+    - Handle empty state (no runs yet)
+    - Sort by most recent first
 
 - [ ] **3.4 Implement cleanup command (src/commands/cleanup.ts)**
-  - Parse `storyId` argument
-  - Parse `--keep-state` flag
-  - Check if worktree exists
-  - Remove worktree
-  - Delete run state (unless `--keep-state`)
-  - Print success message
+    - Parse `storyId` argument
+    - Parse `--keep-state` flag
+    - Check if worktree exists
+    - Remove worktree
+    - Delete run state (unless `--keep-state`)
+    - Print success message
 
 - [ ] **3.5 Wire up CLI entry point (src/index.ts)**
-  - Set up commander program
-  - Add version from package.json
-  - Add description
-  - Register all commands
-  - Add global error handling
+    - Set up commander program
+    - Add version from package.json
+    - Add description
+    - Register all commands
+    - Add global error handling
 
 **Deliverables:**
 
@@ -677,39 +677,39 @@ Cleanup complete for DEV-18
 **Tasks:**
 
 - [ ] **4.1 Write README.md**
-  - Project description and motivation
-  - Installation instructions
-  - Quick start guide
-  - Configuration reference
-  - Template variables reference
-  - Command reference with examples
-  - Bare repo setup guide
-  - Troubleshooting section
+    - Project description and motivation
+    - Installation instructions
+    - Quick start guide
+    - Configuration reference
+    - Template variables reference
+    - Command reference with examples
+    - Bare repo setup guide
+    - Troubleshooting section
 
 - [ ] **4.2 Improve example agent prompts**
-  - Refine build.md with detailed instructions
-  - Refine test.md with testing best practices
-  - Refine review.md with review checklist
+    - Refine build.md with detailed instructions
+    - Refine test.md with testing best practices
+    - Refine review.md with review checklist
 
 - [ ] **4.3 Add input validation**
-  - Validate storyId format (non-empty, valid git branch name)
-  - Validate all story IDs before starting execution
-  - Check OpenCode is installed before running
+    - Validate storyId format (non-empty, valid git branch name)
+    - Validate all story IDs before starting execution
+    - Check OpenCode is installed before running
 
 - [ ] **4.4 Improve error messages**
-  - Add suggestions for common errors
-  - Include links to documentation
-  - Make errors actionable
+    - Add suggestions for common errors
+    - Include links to documentation
+    - Make errors actionable
 
 - [ ] **4.5 Add colors and formatting**
-  - Consistent use of chalk for colors
-  - Spinners for long operations
-  - Clear visual hierarchy
+    - Consistent use of chalk for colors
+    - Spinners for long operations
+    - Clear visual hierarchy
 
 - [ ] **4.6 Final testing**
-  - Test full workflow end-to-end
-  - Test error scenarios
-  - Test with actual OpenCode and Linear MCP
+    - Test full workflow end-to-end
+    - Test error scenarios
+    - Test with actual OpenCode and Linear MCP
 
 **Deliverables:**
 
@@ -738,26 +738,26 @@ You are implementing Linear story **{{storyId}}**.
 ## Instructions
 
 1. **Fetch Story Details**
-   - Use the Linear MCP server to fetch the full story details for `{{storyId}}`
-   - Read the title, description, and any acceptance criteria
+    - Use the Linear MCP server to fetch the full story details for `{{storyId}}`
+    - Read the title, description, and any acceptance criteria
 
 2. **Implement the Feature**
-   - Implement the feature/fix as described in the story
-   - Follow existing code patterns and conventions
-   - Write clean, maintainable code
+    - Implement the feature/fix as described in the story
+    - Follow existing code patterns and conventions
+    - Write clean, maintainable code
 
 3. **Commit Your Changes**
-   - Make atomic commits with meaningful messages
-   - Reference the story ID in commit messages (e.g., "feat({{storyId}}): add user dashboard")
+    - Make atomic commits with meaningful messages
+    - Reference the story ID in commit messages (e.g., "feat({{storyId}}): add user dashboard")
 
 4. **Create a Pull Request**
-   - Use the GitHub CLI: `gh pr create`
-   - Title: Include the story ID and a brief description
-   - Description should include:
-     - Summary of what was implemented
-     - Link to the Linear story
-     - Any architectural decisions made
-     - Testing instructions if applicable
+    - Use the GitHub CLI: `gh pr create`
+    - Title: Include the story ID and a brief description
+    - Description should include:
+        - Summary of what was implemented
+        - Link to the Linear story
+        - Any architectural decisions made
+        - Testing instructions if applicable
 
 ## Context
 
@@ -776,25 +776,25 @@ You are writing tests for Linear story **{{storyId}}**.
 ## Instructions
 
 1. **Review the Implementation**
-   - Look at the code changes made on this branch
-   - Understand what functionality was added or changed
+    - Look at the code changes made on this branch
+    - Understand what functionality was added or changed
 
 2. **Write Unit Tests**
-   - Add unit tests for new functions/methods
-   - Aim for good coverage of the new code
-   - Test edge cases and error conditions
+    - Add unit tests for new functions/methods
+    - Aim for good coverage of the new code
+    - Test edge cases and error conditions
 
 3. **Write Integration/E2E Tests** (if applicable)
-   - Add integration tests if the feature involves multiple components
-   - Add E2E tests for user-facing features
+    - Add integration tests if the feature involves multiple components
+    - Add E2E tests for user-facing features
 
 4. **Run All Tests**
-   - Ensure all existing tests still pass
-   - Ensure new tests pass
-   - Fix any regressions
+    - Ensure all existing tests still pass
+    - Ensure new tests pass
+    - Fix any regressions
 
 5. **Commit Your Tests**
-   - Commit test files with a clear message (e.g., "test({{storyId}}): add tests for user dashboard")
+    - Commit test files with a clear message (e.g., "test({{storyId}}): add tests for user dashboard")
 
 ## Context
 
@@ -813,34 +813,34 @@ You are reviewing the implementation of Linear story **{{storyId}}**.
 ## Instructions
 
 1. **Review All Code Changes**
-   - Look at all commits on this branch
-   - Review both the implementation and tests
+    - Look at all commits on this branch
+    - Review both the implementation and tests
 
 2. **Check for Issues**
-   - Code maintainability and readability
-   - Unnecessary complexity that could be simplified
-   - Edge cases not handled
-   - Potential security vulnerabilities
-   - Performance concerns
-   - Missing error handling
+    - Code maintainability and readability
+    - Unnecessary complexity that could be simplified
+    - Edge cases not handled
+    - Potential security vulnerabilities
+    - Performance concerns
+    - Missing error handling
 
 3. **Fix Minor Issues**
-   - Directly fix small issues (typos, formatting, simple improvements)
-   - Commit fixes with clear messages
+    - Directly fix small issues (typos, formatting, simple improvements)
+    - Commit fixes with clear messages
 
 4. **Document Larger Concerns**
-   - For issues that need human review, add comments to the GitHub PR
-   - Use `gh pr comment` to add your review
-   - Clearly categorize issues:
-     - **Fixed**: Things you fixed directly
-     - **Needs Review**: Things the human should check
-     - **High Risk**: Security or critical issues
+    - For issues that need human review, add comments to the GitHub PR
+    - Use `gh pr comment` to add your review
+    - Clearly categorize issues:
+        - **Fixed**: Things you fixed directly
+        - **Needs Review**: Things the human should check
+        - **High Risk**: Security or critical issues
 
 5. **Summary Comment**
-   - Add a final summary comment with:
-     - Overall assessment
-     - List of fixes made
-     - List of items needing human attention
+    - Add a final summary comment with:
+        - Overall assessment
+        - List of fixes made
+        - List of items needing human attention
 
 ## Context
 
@@ -875,15 +875,15 @@ Items deferred from MVP for future versions:
 
 ```json
 {
-  "storyId": "DEV-18",
-  "branch": "flow/DEV-18",
-  "worktreePath": "/absolute/path/to/DEV-18",
-  "status": "in_progress",
-  "currentAgent": "test",
-  "completedAgents": ["build"],
-  "startedAt": "2025-01-15T10:30:00.000Z",
-  "updatedAt": "2025-01-15T11:45:00.000Z",
-  "error": null
+	"storyId": "DEV-18",
+	"branch": "flow/DEV-18",
+	"worktreePath": "/absolute/path/to/DEV-18",
+	"status": "in_progress",
+	"currentAgent": "test",
+	"completedAgents": ["build"],
+	"startedAt": "2025-01-15T10:30:00.000Z",
+	"updatedAt": "2025-01-15T11:45:00.000Z",
+	"error": null
 }
 ```
 
@@ -902,11 +902,11 @@ Used internally to track results when running multiple stories:
 
 ```typescript
 interface PipelineResult {
-  storyId: string;
-  status: "completed" | "failed" | "skipped";
-  failedAgent?: string; // Name of agent that failed (if status is 'failed')
-  skipReason?: string; // Reason for skip (if status is 'skipped'), e.g., "run already exists", "worktree already exists"
-  error?: string; // Error message (if status is 'failed')
+	storyId: string;
+	status: "completed" | "failed" | "skipped";
+	failedAgent?: string; // Name of agent that failed (if status is 'failed')
+	skipReason?: string; // Reason for skip (if status is 'skipped'), e.g., "run already exists", "worktree already exists"
+	error?: string; // Error message (if status is 'failed')
 }
 ```
 
@@ -951,9 +951,9 @@ Note: A `--from` flag for resuming from a specific agent is planned for a future
 
 The CLI uses the following exit codes for scripting and CI integration:
 
-| Exit Code | Meaning |
-|-----------|---------|
-| `0` | All stories completed successfully |
-| `1` | One or more stories failed or were skipped |
+| Exit Code | Meaning                                    |
+| --------- | ------------------------------------------ |
+| `0`       | All stories completed successfully         |
+| `1`       | One or more stories failed or were skipped |
 
 This ensures that commands like `ocf run STORY-1 STORY-2 && deploy` only proceed if everything succeeded.
