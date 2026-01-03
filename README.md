@@ -25,11 +25,11 @@ Start multiple pipelines and review completed PRs when ready.
 ## Installation
 
 ```bash
-# Install globally
-bun add -g opencode-flow
+# Install globally from GitHub
+npm install -g git+https://github.com/michaelfaisst/opencode-flow.git
 
-# Or use npx
-npx opencode-flow <command>
+# Or with SSH
+npm install -g git+ssh://git@github.com:michaelfaisst/opencode-flow.git
 ```
 
 ### Requirements
