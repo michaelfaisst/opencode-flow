@@ -547,7 +547,7 @@ Cleanup complete for DEV-18
     - `validateConfig()` - Ensure required fields exist
     - Throw descriptive errors for invalid config
 
-- [ ] **2.2 Implement template engine (src/lib/template.ts)**
+- [x] **2.2 Implement template engine (src/lib/template.ts)**
     - `substituteVariables(template, variables)` - Replace `{{var}}` placeholders
     - Handle missing variables gracefully (warn but don't fail)
     - `TemplateVariables` interface for type safety
@@ -591,7 +591,7 @@ Cleanup complete for DEV-18
 
 - [ ] Config loader correctly parses valid YAML
 - [ ] Config loader throws on invalid config
-- [ ] Template substitution works with all variables
+- [x] Template substitution works with all variables
 - [ ] State manager reads/writes JSON correctly
 - [ ] Worktree manager interacts with git correctly
 - [ ] Runner spawns OpenCode and streams output
