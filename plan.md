@@ -552,21 +552,21 @@ Cleanup complete for DEV-18
     - Handle missing variables gracefully (warn but don't fail)
     - `TemplateVariables` interface for type safety
 
-- [ ] **2.3 Implement state manager (src/lib/state.ts)**
+- [x] **2.3 Implement state manager (src/lib/state.ts)**
     - `getRunsDir()` - Get path to `.opencode-flow/runs/`
     - `loadRunState(storyId)` - Load existing run state or return null
     - `saveRunState(state)` - Write run state to JSON file
     - `listRuns()` - List all run state files
     - `deleteRunState(storyId)` - Remove a run state file
 
-- [ ] **2.4 Implement worktree manager (src/lib/worktree.ts)**
+- [x] **2.4 Implement worktree manager (src/lib/worktree.ts)**
     - `isBareRepo()` - Check if current directory is a bare repo
     - `worktreeExists(storyId)` - Check if worktree already exists
     - `createWorktree(storyId)` - Run `git worktree add`
     - `removeWorktree(storyId)` - Run `git worktree remove`
     - `getWorktreePath(storyId)` - Get absolute path to worktree
 
-- [ ] **2.5 Implement agent runner (src/lib/runner.ts)**
+- [x] **2.5 Implement agent runner (src/lib/runner.ts)**
     - `runAgent(agent, variables, config)` - Execute single agent
         - Read prompt file
         - Substitute variables
@@ -589,12 +589,12 @@ Cleanup complete for DEV-18
 
 **Review Checklist:**
 
-- [ ] Config loader correctly parses valid YAML
-- [ ] Config loader throws on invalid config
+- [x] Config loader correctly parses valid YAML
+- [x] Config loader throws on invalid config
 - [x] Template substitution works with all variables
-- [ ] State manager reads/writes JSON correctly
-- [ ] Worktree manager interacts with git correctly
-- [ ] Runner spawns OpenCode and streams output
+- [x] State manager reads/writes JSON correctly
+- [x] Worktree manager interacts with git correctly
+- [x] Runner spawns OpenCode and streams output
 
 ---
 
