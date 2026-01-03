@@ -1,5 +1,10 @@
 import { Command } from "commander";
 
+import { initCommand } from "./commands/init.js";
+import { runCommand } from "./commands/run.js";
+import { statusCommand } from "./commands/status.js";
+import { cleanupCommand } from "./commands/cleanup.js";
+
 const program = new Command();
 
 program
@@ -9,10 +14,18 @@ program
 	)
 	.version("0.1.0");
 
-// Commands will be registered here in Phase 3
-// program.addCommand(initCommand);
-// program.addCommand(runCommand);
-// program.addCommand(statusCommand);
-// program.addCommand(cleanupCommand);
+// Register commands
+program.addCommand(initCommand);
+program.addCommand(runCommand);
+program.addCommand(statusCommand);
+program.addCommand(cleanupCommand);
+
+// Global error handling
+program.exitOverride((err) => {
+	if (err.code === "commander.helpDisplayed" || err.code === "commander.version") {
+		process.exit(0);
+	}
+	process.exit(1);
+});
 
 program.parse();

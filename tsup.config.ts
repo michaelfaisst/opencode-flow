@@ -1,5 +1,6 @@
 import { defineConfig } from "tsup";
 import { tsconfigPathsPlugin } from "esbuild-plugin-tsconfig-paths";
+import { cp } from "node:fs/promises";
 
 export default defineConfig({
 	entry: ["src/index.ts"],
@@ -14,4 +15,9 @@ export default defineConfig({
 		js: "#!/usr/bin/env node",
 	},
 	esbuildPlugins: [tsconfigPathsPlugin({})],
+	async onSuccess() {
+		// Copy templates to dist folder for runtime access
+		await cp("templates", "dist/templates", { recursive: true });
+		console.log("CLI Copied templates to dist/templates");
+	},
 });

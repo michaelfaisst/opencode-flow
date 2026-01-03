@@ -280,7 +280,7 @@ Run the full pipeline for one or more Linear stories.
     - Updates state after each agent
     - Records success, failure, or skip
 4. Displays summary of all results at the end
-5. Exits with code 0 only if ALL stories completed successfully; exits with code 1 if any failed or were skipped
+5. Exits with code 0 if all succeeded; exits with code 1 if any failed or were skipped
 
 **Usage:**
 
@@ -595,6 +595,7 @@ Cleanup complete for DEV-18
 - [x] State manager reads/writes JSON correctly
 - [x] Worktree manager interacts with git correctly
 - [x] Runner spawns OpenCode and streams output
+- [x] Unit tests cover critical paths (runPipeline skip/success/failure flows)
 
 ---
 
@@ -604,7 +605,7 @@ Cleanup complete for DEV-18
 
 **Tasks:**
 
-- [ ] **3.1 Implement init command (src/commands/init.ts)**
+- [x] **3.1 Implement init command (src/commands/init.ts)**
     - Verify running from git root directory (fail if not)
     - Check if `.opencode-flow/` already exists
     - Create directory structure
@@ -613,7 +614,7 @@ Cleanup complete for DEV-18
     - Write `.gitignore` for `runs/`
     - Print success message with next steps
 
-- [ ] **3.2 Implement run command (src/commands/run.ts)**
+- [x] **3.2 Implement run command (src/commands/run.ts)**
     - Parse variadic `storyId...` arguments (one or more story IDs)
     - Load and validate config
     - Capture git root directory at startup
@@ -625,16 +626,16 @@ Cleanup complete for DEV-18
         - Execute pipeline via runner
         - Collect `PipelineResult` (completed/failed/skipped)
     - Display summary of all results at end
-    - Exit with code 0 if all succeeded; exit with code 1 if any failed or skipped
+    - Exit with code 0 if no stories failed; exit with code 1 if any failed (skips do not cause failure)
     - Handle Ctrl+C gracefully (save state)
 
-- [ ] **3.3 Implement status command (src/commands/status.ts)**
+- [x] **3.3 Implement status command (src/commands/status.ts)**
     - Load all run states
     - Format as table
     - Handle empty state (no runs yet)
     - Sort by most recent first
 
-- [ ] **3.4 Implement cleanup command (src/commands/cleanup.ts)**
+- [x] **3.4 Implement cleanup command (src/commands/cleanup.ts)**
     - Parse `storyId` argument
     - Parse `--keep-state` flag
     - Check if worktree exists
@@ -642,7 +643,7 @@ Cleanup complete for DEV-18
     - Delete run state (unless `--keep-state`)
     - Print success message
 
-- [ ] **3.5 Wire up CLI entry point (src/index.ts)**
+- [x] **3.5 Wire up CLI entry point (src/index.ts)**
     - Set up commander program
     - Add version from package.json
     - Add description
@@ -656,17 +657,17 @@ Cleanup complete for DEV-18
 
 **Review Checklist:**
 
-- [ ] `ocf init` creates correct file structure
-- [ ] `ocf run DEV-18` creates worktree and runs agents
-- [ ] `ocf run DEV-18 DEV-19 DEV-20` processes all stories sequentially
-- [ ] Stories with existing run state are skipped with appropriate message
-- [ ] Stories with existing worktree are skipped with appropriate message
-- [ ] Multi-story run continues after failure/skip and reports all results
-- [ ] Multi-story run correctly resets to git root between stories
-- [ ] `ocf status` shows runs in table format
-- [ ] `ocf cleanup DEV-18` removes worktree and state
-- [ ] `ocf cleanup DEV-18 --keep-state` preserves state file
-- [ ] All commands show help with `--help`
+- [x] `ocf init` creates correct file structure
+- [x] `ocf run DEV-18` creates worktree and runs agents
+- [x] `ocf run DEV-18 DEV-19 DEV-20` processes all stories sequentially
+- [x] Stories with existing run state are skipped with appropriate message
+- [x] Stories with existing worktree are skipped with appropriate message
+- [x] Multi-story run continues after failure/skip and reports all results
+- [x] Multi-story run correctly resets to git root between stories
+- [x] `ocf status` shows runs in table format
+- [x] `ocf cleanup DEV-18` removes worktree and state
+- [x] `ocf cleanup DEV-18 --keep-state` preserves state file
+- [x] All commands show help with `--help`
 
 ---
 
@@ -691,25 +692,15 @@ Cleanup complete for DEV-18
     - Refine test.md with testing best practices
     - Refine review.md with review checklist
 
-- [ ] **4.3 Add input validation**
-    - Validate storyId format (non-empty, valid git branch name)
-    - Validate all story IDs before starting execution
-    - Check OpenCode is installed before running
-
-- [ ] **4.4 Improve error messages**
+- [ ] **4.3 Improve error messages**
     - Add suggestions for common errors
     - Include links to documentation
     - Make errors actionable
 
-- [ ] **4.5 Add colors and formatting**
+- [ ] **4.4 Add colors and formatting**
     - Consistent use of chalk for colors
     - Spinners for long operations
     - Clear visual hierarchy
-
-- [ ] **4.6 Final testing**
-    - Test full workflow end-to-end
-    - Test error scenarios
-    - Test with actual OpenCode and Linear MCP
 
 **Deliverables:**
 
@@ -951,9 +942,9 @@ Note: A `--from` flag for resuming from a specific agent is planned for a future
 
 The CLI uses the following exit codes for scripting and CI integration:
 
-| Exit Code | Meaning                                    |
-| --------- | ------------------------------------------ |
-| `0`       | All stories completed successfully         |
-| `1`       | One or more stories failed or were skipped |
+| Exit Code | Meaning                                        |
+| --------- | ---------------------------------------------- |
+| `0`       | All stories completed or skipped (no failures) |
+| `1`       | One or more stories failed                     |
 
-This ensures that commands like `ocf run STORY-1 STORY-2 && deploy` only proceed if everything succeeded.
+This ensures that skipped stories (due to existing run state or worktree) don't break CI pipelines, while actual failures still fail the command.

@@ -1,0 +1,26 @@
+# Global settings applied to all agents unless overridden
+settings:
+    # Default model for all agents (optional)
+    # Format: provider/model
+    defaultModel: anthropic/claude-sonnet-4-20250514
+
+    # Default OpenCode agent for all agents (optional)
+    defaultAgent: build
+
+# Agents to run in sequence
+agents:
+    - name: build
+      # Path to prompt markdown file (relative to .opencode-flow/)
+      promptPath: ./agents/build.md
+      # Override model for this agent (optional)
+      # model: anthropic/claude-sonnet-4-20250514
+      # Override OpenCode agent for this agent (optional)
+      # agent: plan
+
+    - name: test
+      promptPath: ./agents/test.md
+      # Uses defaultModel and defaultAgent from settings
+
+    - name: review
+      promptPath: ./agents/review.md
+      # model: anthropic/claude-sonnet-4-20250514
